@@ -1,0 +1,560 @@
+*MM82(B) Controller, Typ ReCtrl2
+*2006-05-23  LambdaOpt & CpOpt für RE40 eingetragen
+*2006-04-12  Supervisory ausgetauscht, angepasst nach V-2.5-LA.00.12-A-C:
+*		- Pitch Runaway Überwachung StCd1905 --> BP75
+*		- StCd102: Netzausfall --> BP180 nachgepflegt
+*		- Drehzahlüberwachungen deaktivierbar durch Flag DLC22a
+*		- Viele Überwachungen nur bis Pitchwinkel 88°
+*		- StCd1922 Blattwinkel Soll-Istwertdifferenz
+*		- Überwachung Windgeschw. > 14m/s verbessert
+*		DtDampRampTime und Abschnitt Ramps nachgepflegt in Regler-Sektion
+*2005-05-26  Zusatzpitch changed to 2° at 10000Nm (before: 2.8° at 8000Nm)
+*2005-05-04  Supervisory actualized according to V-2.5-LA.00.12-A-B_in_Arbeit for REdiscon V1.0.3
+*2005-04-13  Input for Flex (parameters with comment 'read from Flex...' deactivated)
+*        Supervisory not actual! (HLw)
+*2005-02-07  Fine Tuning: Gain increased from 0.75 to 0.9, gain scheduling modified, Boost controller
+*            activated, SetPitchGap reduced from 20 to 12 deg
+*2005-01-21  Gain scheduling time constant introduced and set to PowGSTimeConst = 1sec
+*2004-12-15  Power fine tuning introduced
+*2004-10-21  Adapted from Gh controller
+*            modified drive train damper, notch on, new pitch ctrl gain scheduling
+
+LOG     4
+
+Version     2 0 0                                   *Repower controller version
+
+************* Turbine characteristics *************
+RpmMinConverter     900                     [rpm]   *read from Flex if not specified; minimal rpm of converter
+RpmMinOffset        200                      [rpm]   *minimal rpm for controller (MinRpm = MinRpmConverter + MinRpmOffset)
+LambdaOpt           8.3                     [-]     *optimal tip speed ratio
+CpOpt                0.4905                    [-]     *optimal power coefficient
+*Rho                 1.225                   [kg/m³] *read from Flex if not specified; air density (site specific: from height above sea level)
+RatedPower          2080                    [kW]    *read from Flex if not specified; Rated Power
+*MaxTorque           12020                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
+*MinTorque           -1100                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
+*RotorRadius         41.0400                 [m]     *read from Flex if not specified; rotor radius
+*GearRatio           105.4000                [-]     *read from Flex if not specified; gear box ratio
+*ElecEfficiency      0.9542                  [-]     *read from Flex if not specified; electrical efficiency of generator/converter system
+GearFriction        66.21                 [Nm]    *read from Flex if not specified; assumed constant friction (rel. to high speed shaft)
+GearEfficiency      0.9740                  [-]     *read from Flex if not specified; gear box efficiency
+
+************* Main controller *************
+SetRpmSlope         0                       [%rpm]  *rpm setpoint reduction at zero torque (NR:17.7)
+SetRpmShift         5.5                     [%rpm]  *Max. rpm setpoint shift
+SetRpmShiftPit      6.13                    [%rpm]  *Increase of Pitch controller rpm setpoint at zero torque
+SetPitchGap         12                      [deg]   *Pitch difference for minimum power ctrl rpm setpoint
+SetRpmFiltTime      5                       [s]     *Time constant for setting rpm reference
+SetRpmRateMax       2.8                     [%rpm/s] *Rate limit for internal rpm setpoint
+
+************* Noise reduced operation ******
+Noise_active        0		[-]		*switch noise reduction on/off
+Noise_RpmSetExt     1800  	[rpm]		*max. rpm setpoint in noise reduced operation
+Noise_PowerSetExt   2050  	[kW]		*max. power setpoint in noise reduced operation
+Noise_PowerSetRate  100		[kW/s]	*rate for power reduction/restoration (only for noise reduction)
+Noise_RpmSlope_1    11    	[%rpm]  	*rpm setpoint reduction slope lower part
+Noise_RpmSlope_2    85    	[%rpm]  	*rpm setpoint reduction slope upper part
+Noise_TrqSwitch     74    	[%Nm]   	*Torque Switch Threshold between Slope 1 and Slope 2
+
+************* Pitch controller *************
+PitSampleTime       0.06                    [s]     *pitch controller output sample time
+PitPIGain           0.9                     [deg/%rpm]   *PI controller proportional gain
+PitPITime           2.6                     [s]     *PI controller integral time const.
+PitBoostFac         0.5                     [-]     *Additional feed back gain
+PitBoostStart       3                       [%rpm]  *Start of boost area
+PitNGS              4                       [-]     *Number of bins for PitGS
+PitGSPitchBin       5  10   20     40       [deg]   *Gain scheduling, pitch angle bins
+PitGSGain           1.0 0.75 0.53 0.3       [-]     *Gain scheduling, gain bins
+PitFiltOn           1                       [-]     *Notch filter activation flag (1= on)
+PitFiltZeroFreq     1.7                     [Hz]    *Notch numerator (zero) frequency
+PitFiltShapeFactor  0.5                     [-]     *Notch numerator damping
+PitTrqFeedBack      5                       [deg/%Trq] *Pitch reaction on torque error
+PitTrqThreshold     10                      [%Trq]  *Minimum torque error for pitch controller triggering
+PitFineOn           0                       [-]     *Fine pitch activation flag (1 = on)
+PitNFine            3                       [-]     *Number of bins for PitFine
+PitFineLambda       5.2 6.1 7.1             [-]     *Tip speed ratio bins for fine pitch adjustment
+PitFineAngle        4 2 0                   [deg]   *Pitch angle bins
+PitFineDeadband     0.4                     [-]     *Lambda deadband for pitch fine adjustment
+PitFineRateMax      1                       [deg/s] *Rate limit for fine pitch adjustment
+
+************* Power/torque controller *************
+PowPIGain           7.14                    [%Trq/%rpm] *PI speed controller gain
+PowPITime           3                       [s]     *PI speed controller time constant
+PowNGS              2                       [-]     *Number of bins for PowGS
+PowGSTrqBin         0    45                 [%Trq]  *Gain scheduling, torque bins
+PowGSGain           0.3  1                  [-]     *Gain scheduling, gain bins
+PowGSTimeConst      1                       [s]     *Gain scheduling, time constant
+PowFineMaxBoost     5                       [%Trq]  *Maximum torque adjustment for fine power adjustment
+PowFineTimeConst    120                     [s]     *Time constant for torque adjustment
+
+************* Grenzkennlinie *************
+PowNLimCurve		3				[-]     	*Number of bins for Power limiting curve
+PowLimCurveSpdBin		50.00	100.00  116.67	[%rpm]	*Power limiting curve, speed (relative to rated speed)
+PowLimCurveTorque		5606	11547	  13745	[Nm]		*Power limiting curve, torque
+PowLimCurveTimeConst	0.1				[s]     	*Power limiting curve, filter time constant (PT1)
+
+************* Drive train damper *************
+DTDampGain          1.62                    [%Trq/%rpm] *Drive train damper gain
+DTDampPeakFreq      1.7                     [Hz]    *Damping filter resonance
+DTDampShapeFactor   0.5                     [-]     *Damping filter shape factor
+DTDampLeadTime      0.1                     [s]     *Damping filter lead time
+
+************* Filters *************
+MeasSpdFiltTime     0.033                   [s]     *Filter time constant for speed measurement (only input for pitch controller)
+MeasTrqFiltTime     0.1                     [s]     *Filter time constant for torque measurement
+
+*------------------------------------------------------------------------------------------------------
+************* Maximalmomentenkennlinie (--> Supervisory Variable GENERATORTORQUEENVELOPE) *************
+TrqEnvN		3					[-]		* size of Torque Envelope table
+TrqEnvSpd		50.0	100.0	116.67		[%rpm]	* torque envelope speed bin (relative to rated speed)
+TrqEnvTrq		5606	11547	13745			[Nm]		* torque envelope torque value
+TrqEnvAvt		1					[s]		* torque envelope averaging time (PT1)
+
+************** Tower Feedback *************
+*TwrFbN		2					[-]		* size of Torque Feedback gain table
+**               	3°		25°
+*TwrFbPit		0.0524	0.436			[rad]		* Mean pitch angle
+*TwrFbGain		0		0.0873		[rads²/m]	* = 5°/m/s²  feedback p-gain at mean pitch angle
+*TwrFbAvt		5					[s]		* Mean pitch averaging time (PT1)
+*TwrFbDelay		0.40					[s]		* Feedback delay time (phase shift)
+
+
+*************************************************************************************************************		
+******************************************  S U P E R V I S O R Y  ******************************************		
+*************************************************************************************************************		
+
+SUPERVIS	1	
+
+
+******************************************         EVENTS          ******************************************		
+
+* Normalbetrieb (kein Bremsprogramm)		
+EVENT_LEVELCROSSING		
+VARIABLE	Time	
+VALUE		3
+ACTIONLIST	Init	
+
+** Auslösung wegen Überschreitung Gen Drehzahl 2060.0 rpm; Erkannt durch BFS-Rechner; MITA StCd 213; REguard StCd 62		
+** Blattwinkel fährt mit 5°/s, bis (G)sicher erreicht ist; dann wird Nenndrehzahl von (G)nenn auf (G)sicher reduziert für (G)sicher zeit = 180s; Anschließend wird (G)nenn mit 10rpm/s (Konstante) wieder angefahren.				
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState, !DLC22a			
+*VARIABLE	MeasuredGeneratorSpeed			
+*VALUE		215.7227		* 2060 rpm
+*DIRECTION	1			
+*DELAY		0.2		
+*ACTIONLIST	SetGSicher, SetMinRate, StCd213			
+*
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState, !DLC22a			
+*VARIABLE	MeasuredGeneratorSpeed			
+*VALUE		215.7227		* 2060 rpm
+*DIRECTION	1			
+*DELAY		180
+*DURATION	0.2	
+*ACTIONLIST	ReSetGSicher			
+*
+*EVENT_LEVELCROSSING				
+*VARIABLE	MeasuredGeneratorSpeed			
+*VALUE		183.2596		* 1750 rpm
+*DIRECTION	-1			
+*ACTIONLIST	ReSetMinRate			
+*
+** Auslösung wegen Überschreitung  StatusCode 1904.5 -; Erkannt durch Pitch-controller; MITA StCd 1905; REguard StCd 692				
+** Pitch Richtung Fahne mit 8.0°/s  (einzustellen im Pitch Controller), wenn Drehzahl überschritten ist UND Blätter stillstehen oder Richtung 0° pitchen; 				
+*EVENT_LEVEL				
+*VARIABLE	StatusCode			
+*VALUE		1905.5		
+*ABOVE		-1		
+*EVENT_LEVEL				
+*STATELIST	NoState, BP52, BP75, !DLC22a			
+*VARIABLE	StatusCode			
+*VALUE		1904.5
+*ABOVE		1
+*ACTIONLIST	SetBP75, RmpP_8, ContactorOff, StCd1905	
+*
+** Auslösung wegen Unterschreitung Gen DemandedGridContactor 0.5 -; Erkannt durch Umrichter; MITA StCd 1644; REguard StCd 3210		
+** Generatorabschaltung erfolgt durch Flex Generatormodell und wird durch diese Überwachung von Supervisory erkannt.		
+*EVENT_LEVEL		
+*VARIABLE	MeasuredGeneratorSpeed	
+*VALUE		94.8            * gut 900 rpm
+*ABOVE		-1
+*EVENT_LEVELCROSSING		
+*STATELIST	NoState, BP52, !DLC22a	
+*VARIABLE	DemandedGridContactor	
+*VALUE		0.5
+*DIRECTION	-1	
+*DELAY		0.2
+*ACTIONLIST	SetBP75, RmpP_8, ContactorOff, StCd1644	
+*
+** Auslösung wegen Unterschreitung Gen DemandedGridContactor 0.5 -; Erkannt durch Umrichter; MITA StCd 1411; REguard StCd 3120		
+** Generatorabschaltung erfolgt durch Flex Generatormodell und wird durch diese Überwachung von Supervisory erkannt. 		
+*EVENT_LEVEL		
+*VARIABLE	MeasuredGeneratorSpeed	
+*VALUE		219.3           * knapp 2100 rpm
+*ABOVE		1
+*EVENT_LEVELCROSSING		
+*STATELIST	NoState, BP52, !DLC22a	
+*VARIABLE	DemandedGridContactor	
+*VALUE		0.5
+*DIRECTION	-1	
+*DELAY		0.2
+*ACTIONLIST	SetBP75, RmpP_8, ContactorOff, StCd1411	
+*
+** Auslösung wegen Unterschreitung NEM DemandedGridContactor 0.5 -; Erkannt durch BFS-Rechner; MITA StCd 102; REguard StCd 3500		
+** Generatorabschaltung erfolgt durch Flex NEvent und wird durch diese Überwachung von Supervisory erkannt und von Verlassen des Drehzahlarbeitsbereichs unterschieden. 		
+*EVENT_LEVEL		
+*VARIABLE	MeasuredGeneratorSpeed	
+*VALUE		116.2  * gut 1100rpm
+*EVENT_LEVELCROSSING		
+*STATELIST	NoState, BP52, !DLC22a	
+*VARIABLE	DemandedGridContactor	
+*VALUE		0.5
+*DIRECTION	-1	
+*DURATION	0.22	
+*ACTIONLIST	SetBP180, RmpP_8, UnCtrBattPitch, ContactorOff, StCd102	
+*
+** Auslösung wegen Überschreitung Gen Drehzahl 2260.0 rpm; Erkannt durch BFS-Rechner; MITA StCd 310; REguard StCd 1600		
+*EVENT_LEVELCROSSING		
+*STATELIST	!DLC22a, !BP190, !BP200	
+*VARIABLE	MeasuredGeneratorSpeed			
+*VALUE		236.6666		* 2260 rpm
+*DIRECTION	1			
+*ACTIONLIST	SetBP75, RmpP_8, ContactorOff, StCd310			
+*
+** Auslösung wegen Überschreitung Rotor Drehzahl 21.5 rpm; Erkannt durch BFS-Rechner; MITA StCd 311; REguard StCd 805				
+*EVENT_LEVELCROSSING				
+*STATELIST	!DLC22a, !BP190, !BP200			
+*VARIABLE	MeasuredRotorSpeed			
+*VALUE		2.2515		* 21.5 rpm
+*DIRECTION	1			
+**FLOATMEAN	2.8			
+*ACTIONLIST	SetBP75, RmpP_8, ContactorOff, StCd311			
+*
+** Auslösung wegen Überschreitung Getr. Drehzahl 2400.0 rpm; Erkannt durch BFS-Rechner; MITA StCd 328; REguard StCd 1610				
+** Sicherheitskette wird ausgelöst				
+*EVENT_LEVELCROSSING				
+*VARIABLE	MeasuredGeneratorSpeed			
+*VALUE		251.3274		* 2400 rpm
+*DIRECTION	1			
+*ACTIONLIST	SetBP200, RmpP_8, UnCtrBattPitch, ApplyBrake, ContactorOff, StCd328			
+*
+** Auslösung wegen Überschreitung Rotor Drehzahl 22.7 rpm; Erkannt durch BFS-Rechner; MITA StCd 317; REguard StCd 810				
+** Sicherheitskette wird ausgelöst				
+*EVENT_LEVELCROSSING				
+*VARIABLE	MeasuredRotorSpeed			
+*VALUE		2.3771		* 22.7 rpm
+*DIRECTION	1			
+**FLOATMEAN	2.8			
+*ACTIONLIST	SetBP200, RmpP_8, UnCtrBattPitch, ApplyBrake, ContactorOff, StCd317			
+*
+** Auslösung wegen Überschreitung NEM el. Leistung 2150.0 kW; Erkannt durch BFS-Rechner; MITA StCd 530; REguard StCd 2710				
+** Generatorkurzschluß oder falsche Umrichterkennlinie oder falsche Einstellung der Grenzen des Analogsignals für Sollmoment				
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState, BP50, BP52			
+*VARIABLE	MeasuredElectricalPower			
+*VALUE		2150000		* 2150 kW
+*DIRECTION	1			
+*DELAY		0.2		
+*FLOATMEAN	600			
+*DURATION	10			
+*ACTIONLIST	SetBP52, RmpP_2.5, StCd530			
+*
+** Auslösung wegen Überschreitung NEM el. Leistung 2650.0 kW; Erkannt durch BFS-Rechner; MITA StCd 550; REguard StCd 2800				
+** Generatorkurzschluß oder falsche Umrichterkennlinie oder falsche Einstellung der Grenzen des Analogsignals für Sollmoment				
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState, BP50, BP52			
+*VARIABLE	MeasuredElectricalPower			
+*VALUE		2650000		* 2650 kW
+*DIRECTION	1			
+*DELAY		0.2		
+*DURATION	1			
+*ACTIONLIST	SetBP200, RmpP_8, UnCtrBattPitch, ApplyBrake, ContactorOff, StCd550			
+*
+** Auslösung wegen Überschreitung BldFl Blattwinkeldifferenz 1.0 deg; Erkannt durch BFS-Rechner; MITA StCd 1113; REguard StCd 555				
+** Überwachung bis 88° (Konstante); in BP > 180 ist der Grenzwert 30°, sonst bei pitchenden Blättern 1° und bei eingelegter Pitchbremse 0.5°. meist gefolgt von 1121				
+**		Überwachung bis zu einem Blattwinkel von 88°		
+*EVENT_LEVEL				
+*VARIABLE	MeanMeasuredPitch			
+*VALUE		1.536		
+*ABOVE		-1		
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState			
+*VARIABLE	MeasuredPitch			
+*VAROP		5		
+*VALUE		0.0175		* 1 deg
+*DIRECTION	1			
+*DELAY		0.2		
+*FLOATMEAN	0.05			
+*DURATION	2			
+*ACTIONLIST	SetBP52, RmpP_2.5, SetPDiff, StCd1113			
+*
+** Auslösung wegen Überschreitung BldFl Blattwinkeldifferenz 6.0 deg; Erkannt durch BFS-Rechner; NEU EINGEFÜGT!!!!
+** Überwachung bis 88° (Konstante); in BP > 180 ist der Grenzwert 30°, sonst bei pitchenden Blättern 1° und bei eingelegter Pitchbremse 0.5°. meist gefolgt von 1121				
+**		Überwachung bis zu einem Blattwinkel von 88°		
+*EVENT_LEVEL				
+*VARIABLE	MeanMeasuredPitch			
+*VALUE		1.536		
+*ABOVE		-1		
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState			
+*VARIABLE	MeasuredPitch			
+*VAROP		5		
+*VALUE		0.1047		* 6 deg
+*DIRECTION	1			
+*DELAY		0.2		
+*FLOATMEAN	0.05			
+*DURATION	2			
+*ACTIONLIST	SetBP180, RmpP_8, UnCtrBattPitch, ContactorOff, StCd7777
+*
+** Auslösung wegen Unterschreitung BldFl Pitchraten Einzelüberwachung 1.5 deg/s; Erkannt durch BFS-Rechner; MITA StCd 1919; REguard StCd 567				
+** oft Folgefehler von 1113, 1161; Überwachung bis Blattwinkel 'Bpxy P.' (68° für BP 50-60, 88° für BP 75/180); unterschiedl. Grenzwerte für versch. Bremsprogramme;  siehe auch Kommentare				
+**		Überwachung bis zu einem Blattwinkel von 68°		
+*EVENT_LEVEL				
+*VARIABLE	MeanMeasuredPitch			
+*VALUE		1.1868		* 68°		
+*ABOVE		-1		
+*EVENT_LEVEL				
+*STATELIST	BP50, BP52, BP60			
+*VARIABLE	DiffMeasuredPitch			
+*VALUE		0.0262		* 1.5 deg/s
+*ABOVE		-1		
+*DELAY		0.2		
+*FLOATMEAN	0.5			
+*DURATION	2			
+*ACTIONLIST	SetBP190, RmpP_8, UnCtrBattPitch, ApplyBrake, ContactorOff, StCd1919			
+*
+** Auslösung wegen Unterschreitung BldFl Pitchraten Einzelüberwachung 5.0 deg/s; Erkannt durch BFS-Rechner; MITA StCd 1919; REguard StCd 569				
+** oft Folgefehler von 1113, 1161; Überwachung bis Blattwinkel 'Bpxy P.' (68° für BP 50-60, 88° für BP 75/180); unterschiedl. Grenzwerte für versch. Bremsprogramme;  siehe auch Kommentare				
+**		Überwachung bis zu einem Blattwinkel von 88°		
+*EVENT_LEVEL				
+*VARIABLE	MeanMeasuredPitch			
+*VALUE		1.536		
+*ABOVE		-1		
+*EVENT_LEVEL				
+*STATELIST	BP75, BP180			
+*VARIABLE	DiffMeasuredPitch			
+*VALUE		0.0873		* 5 deg/s
+*ABOVE		-1		
+*DELAY		0.2		
+*FLOATMEAN	0.5			
+*DURATION	2			
+*ACTIONLIST	SetBP190, RmpP_8, UnCtrBattPitch, ApplyBrake, ContactorOff, StCd1919			
+*
+** Auslösung wegen Überschreitung BldFl Blattwinkel- Soll-Istwert-differenz 6.0 deg; Erkannt durch BFS-Rechner; MITA StCd 1922; REguard StCd 581				
+** Überwachung bis 88° (Konstante)				
+**		Überwachung bis zu einem Blattwinkel von 88°		
+*EVENT_LEVEL				
+*VARIABLE	MeanMeasuredPitch			
+*VALUE		1.536		
+*ABOVE		-1		
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState, BP50, BP52, BP60,  BP75, !DLC22a			
+*VARIABLE	MeasuredPitch			
+*SUBVAR		DemandedPitch		
+*ABSOLUTE	1			
+*VALUE		0.1047		* 6 deg
+*DIRECTION	1			
+*DURATION	0.2			
+*ACTIONLIST	SetBP52, RmpP_2.5, StCd1922			
+*
+** Auslösung wegen Überschreitung WF Windrichtung 45.0 deg; Erkannt durch BFS-Rechner; MITA StCd 215; REguard StCd 63				
+** Auswertung NUR, wenn der 1s-Mittelwert der Windgeschwindigkeit > 14m/s ist (MITA: Konstante; Reguard Parameter: 'checkdeviationyawwindspeedGpRe')! --> STATELIST				
+*EVENT_LEVEL				
+*VARIABLE	MeasuredWindSpeed			
+*VALUE		14		
+*FLOATMEAN	1			
+*EVENT_LEVELCROSSING				
+*STATELIST	NoState			
+*VARIABLE	|MeasuredYawError|			
+*VALUE		0.7854		* 45 deg
+*DIRECTION	1			
+*DELAY		0.2		
+*FLOATMEAN	1			
+*DURATION	5			
+*ACTIONLIST	SetBP52, RmpP_2.5, StCd215			
+
+**--  Zusatz Pitch Funktion  --	 KEIN ZUSATZPITCH BEIM RE40!!!				
+*EVENT_LEVELCROSSING				
+*VARIABLE	MeasuredGeneratorTorque			
+*VALUE		10000
+*DIRECTION	1			
+*FLOATMEAN	0.5			
+*ACTIONLIST	RampFPup			
+*
+*EVENT_LEVELCROSSING				
+*VARIABLE	MeasuredGeneratorTorque
+*VALUE		10000
+*DIRECTION	-1			
+*FLOATMEAN	0.5			
+*DURATION	10			
+*ACTIONLIST	RampFPdwn			
+
+********************** NORMALAUS Prozedur ***************************
+		
+* nach Auslösen BPxx Faktor berechnen mit dem aus Drehzahl Sollmoment berechnet wird (UserVariable2 --> merken in UserVariable3)
+* aber: "nur ein einziges Ping..." deshalb !CalcStartTrq
+EVENT_LEVEL		
+STATELIST	BP52, !CalcStartTrq	
+VARIABLE	DemandedGeneratorTorque
+SUBVAR 		MeasuredGeneratorSpeed
+SUBVAROP		4	* Division
+VALUE		0	* Sobald BP52 ausgelöst
+RESULT		UserVariable2
+ACTIONLIST	CalcStartTrq
+
+* 1 Zeitschritt nach Auslösen BPxx Torque Rampe auslösen, d.h. bis GenoShutdown: DemandedGeneratorTorque := UserVariable4 ...
+EVENT_LEVEL		
+STATELIST	BP52, !GenoShutdown	
+VARIABLE	Time
+VALUE		0
+DELAY		0.02
+ACTIONLIST	RmpTrq
+
+* Momentensollwert = Faktor * aktuelle Drehzahl
+CALCULATE
+VARIABLE	UserVariable3, MeasuredGeneratorSpeed
+VAROP		3
+RESULT		UserVariable4	
+
+*-- Generatorabschaltung in spezifischen Bremsprogrammen bei Unterschreiten einer Grenzdrehzahl ---				
+* Generatorabschaltung in (den) Bremsprogramm(en) 'BP52' bei Unterschreiten der Drehzahl 1100 rpm				
+EVENT_LEVEL				
+STATELIST	BP52			
+VARIABLE	MeasuredGeneratorSpeed			
+VALUE		115.1917		* 1100 rpm
+ABOVE		-1		
+ACTIONLIST	GenoShutdown
+
+EVENT_LEVEL		
+STATELIST	BP52	
+VARIABLE	DemandedGeneratorTorque	
+VALUE		1	* 1Nm
+ABOVE	-1	
+ACTIONLIST	ContactorOff			
+*---------------- Ende Generatorabschaltung bei Unterschreiten einer Grenzdrehzahl ----------------				
+
+* Umschalten auf Pitchrampe 1°/s bei 68° Blattwinkel 
+EVENT
+STATELIST	BP52
+VARIABLE	MeanMeasuredPitch
+VALUE		1.1868		* 68°
+ACTIONLIST	RmpP_1
+
+
+
+******************************************         STATES          ******************************************				
+
+ACTION		Init		
+STATE		NoState		
+
+ACTION		SetDLC22a		
+FLAG		DLC22a
+
+ACTION		SetHighPitchAngle
+STATE		HighPitchAngle
+
+ACTION		SetPDiff
+STATE		PitchAngleDiff
+
+ACTION		CalcStartTrq
+FLAG		CalcStartTrq
+
+ACTION		GenoShutdown
+FLAG		GenoShutdown
+
+
+******************************************         ACTIONS         ******************************************		
+
+*--------------------  Setzen Batteriefahrt, Generatorabschaltung, Bremse  ------------------------		
+
+ACTION_SETONCE	CtrBattPitch	
+VARIABLE	DemandedBatteryPitch	
+VALUE	1	
+		
+ACTION_SET	ContactorOff	
+VARIABLE	DemandedGridContactor	
+VALUE		0		
+
+ACTION_SETONCE	UnCtrBattPitch			
+VARIABLE	DemandedBatteryPitch			
+VALUE		2		
+
+ACTION_SETONCE	ApplyBrake			
+VARIABLE	DemandedBrake			
+VALUE		1		
+
+ACTION_SETONCE	OpenBrake	
+VARIABLE	DemandedBrake	
+VALUE	0	
+		
+*------------------  Ende Setzen Batteriefahrt, Generatorabschaltung, Bremse  ---------------------				
+
+*-------------------------------------  Setzen Pitchraten  ----------------------------------------				
+ACTION_SETONCE	ReSetMinRate			
+VARIABLE	MinimumPitchRate			
+VALUE		-0.0524		* -3 deg/s
+
+ACTION_SETONCE	SetMinRate			
+VARIABLE	MinimumPitchRate			
+VALUE		0.0873		* 5.0 deg
+
+****************** Bremsprogramm 52 *************************
+
+* Im ersten Zeitschritt BP52 Faktor zur Berechnung Torquerampe merken...
+ACTION_SETONCE	CalcStartTrq
+VARIABLE	UserVariable3	*bleibt nach einmaliger Berechnung konstant!
+VALUE		UserVariable2	*wird ständig neu berechnet!
+
+* Momentenrampe ~ Drehzahl in BP52, bis GenoShutdown
+ACTION_SETONCE	RmpTrq
+VARIABLE	DemandedGeneratorTorque
+VALUE		UserVariable4
+
+* Rampe Moment in 1s auf 0
+ACTION_RAMP	GenoShutdown
+VARIABLE	DemandedGeneratorTorque
+DURATION	1
+VALUE		0
+
+* Pitch Rampe 2.5°/s
+ACTION_RAMP	RmpP_2.5
+VARIABLE	DemandedPitch	
+RATE		0.04365	
+
+* Umschalten Pitchgeschwindigkeit auf 1°/s bei Erreichen 68°
+ACTION_RAMP	RmpP_1	
+VARIABLE	DemandedPitch	
+RATE		0.0175	
+
+******************* Ende BP52 **********************
+
+ACTION_RAMP	RmpP_5			
+VARIABLE	DemandedPitch			
+RATE		0.0873		* 5.0 deg/s
+
+ACTION_RAMP	RmpP_8			
+VARIABLE	DemandedPitch			
+RATE		0.1396		* 8.0 deg/s
+
+*----------------------------------  Ende Setzen Pitchraten  --------------------------------------				
+
+*--------------------------------------  Hilfskonstrukte  -----------------------------------------				
+ACTION_SETONCE	SetGSicher			
+VARIABLE	DemandedGeneratorSpeed			
+VALUE		183.2596		* 1750 rpm
+
+ACTION_RAMP	ReSetGSicher			
+VARIABLE	DemandedGeneratorSpeed			
+RATE		1.0472		* 10 rpm/s
+VALUE		188.4956		* 1800 rpm
+
+ACTION_RAMP	RampFPup			
+VARIABLE	MinimumPitchAngle			
+RATE		0.0175		* 1.0 deg/s
+VALUE		0.0349		* 2.0 deg
+
+ACTION_RAMP	RampFPdwn			
+VARIABLE	MinimumPitchAngle			
+RATE		-0.0175		* -1.0 deg/s
+VALUE		0		* 0.0 deg
+
+*-----------------------------------  Ende Hilfskonstrukte  ---------------------------------------				

@@ -1,0 +1,24 @@
+************* Turbine characteristics *************
+RatedPower          2080                    [kW]    *read from Flex if not specified; Rated Power
+GearEfficiency      0.9740                  [-]     *read from Flex if not specified; gear box efficiency
+
+************* Pitch controller *************
+PitSampleTime       0.06                    [s]     *pitch controller output sample time
+PitPIGain           0.9                     [deg/%rpm]   *PI controller proportional gain
+PitPITime           2.6                     [s]     *PI controller integral time const.
+PitNGS              4                       [-]     *Number of bins for PitGS
+PitGSPitchBin       5  10   20     40       [deg]   *Gain scheduling, pitch angle bins
+PitGSGain           1.0 0.75 0.53 0.3       [-]     *Gain scheduling, gain bins
+PitFiltOn           1                       [-]     *Notch filter activation flag (1= on)
+PitFiltZeroFreq     1.7                     [Hz]    *Notch numerator (zero) frequency
+PitFiltShapeFactor  0.5                     [-]     *Notch numerator damping
+PitTrqFeedBack      5                       [deg/%Trq] *Pitch reaction on torque error
+PitTrqThreshold     10                      [%Trq]  *Minimum torque error for pitch controller triggering
+
+************* Power/torque controller *************
+PowPIGain           7.14                    [%Trq/%rpm] *PI speed controller gain
+PowPITime           3                       [s]     *PI speed controller time constant
+PowNGS              2                       [-]     *Number of bins for PowGS
+PowGSTrqBin         0    45                 [%Trq]  *Gain scheduling, torque bins
+PowGSGain           0.3  1                  [-]     *Gain scheduling, gain bins
+PowGSTimeConst      1                       [s]     *Gain scheduling, time constant
