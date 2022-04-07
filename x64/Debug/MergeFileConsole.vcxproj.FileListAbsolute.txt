@@ -1,1 +1,2 @@
 C:\Users\User\source\repos\MergeFileConsole\x64\Debug\MergeFileConsole.exe
+C:\Users\Mj\S2\mergefilesctrl\x64\Debug\MergeFileConsole.exe

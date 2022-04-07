@@ -1,0 +1,26 @@
+*MM82(B) Controller, Typ ReCtrl2
+*2006-05-23  LambdaOpt & CpOpt für RE40 eingetragen
+*2006-04-12  Supervisory ausgetauscht, angepasst nach V-2.5-LA.00.12-A-C:
+*		- Pitch Runaway Überwachung StCd1905 --> BP75
+*		- StCd102: Netzausfall --> BP180 nachgepflegt
+*		- Drehzahlüberwachungen deaktivierbar durch Flag DLC22a
+*		- Viele Überwachungen nur bis Pitchwinkel 88°
+*		- StCd1922 Blattwinkel Soll-Istwertdifferenz
+*		- Überwachung Windgeschw. > 14m/s verbessert
+*		DtDampRampTime und Abschnitt Ramps nachgepflegt in Regler-Sektion
+*2005-05-26  Zusatzpitch changed to 2° at 10000Nm (before: 2.8° at 8000Nm)
+*2005-05-04  Supervisory actualized according to V-2.5-LA.00.12-A-B_in_Arbeit for REdiscon V1.0.3
+*2005-04-13  Input for Flex (parameters with comment 'read from Flex...' deactivated)
+*        Supervisory not actual! (HLw)
+*2005-02-07  Fine Tuning: Gain increased from 0.75 to 0.9, gain scheduling modified, Boost controller
+*            activated, SetPitchGap reduced from 20 to 12 deg
+*2005-01-21  Gain scheduling time constant introduced and set to PowGSTimeConst = 1sec
+*2004-12-15  Power fine tuning introduced
+*2004-10-21  Adapted from Gh controller
+*            modified drive train damper, notch on, new pitch ctrl gain scheduling
+
+LOG     4
+
+Version     2 0 0                                   *Repower controller version
+
+************* Turbine characteristics *************

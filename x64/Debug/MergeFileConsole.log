@@ -1,2 +1,3 @@
 ﻿  MergeFileConsole.cpp
-  MergeFileConsole.vcxproj -> C:\Users\User\source\repos\MergeFileConsole\x64\Debug\MergeFileConsole.exe
+  The contents of <filesystem> are available only with C++17 or later.
+  MergeFileConsole.vcxproj -> C:\Users\Mj\S2\mergefilesctrl\x64\Debug\MergeFileConsole.exe

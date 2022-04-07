@@ -9,12 +9,24 @@
 #include <stdlib.h>
 #include <cstdio>
 #include <fstream>
+#include <filesystem>
+#include <Windows.h>
+
 using namespace std;
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	cout << "Hello World!\n";	
+	std::wcout << ExePath() << "\n";
 	MergeFiles();
+	
+}
+
+std::wstring ExePath() {
+	TCHAR buffer[MAX_PATH] = { 0 };
+	GetModuleFileName(NULL, buffer, MAX_PATH);
+	std::wstring::size_type pos = std::wstring(buffer).find_last_of(L"\\/");
+	return std::wstring(buffer).substr(0, pos);
 }
 
 // Temp workaround for customer
@@ -24,9 +36,12 @@ int MergeFiles() {
 	fstream newFile;
 	fstream wFile;
 
-	oldFile.open("C:\\Users\\User\\Desktop\\MM82 Controller\\WindsyCtrlWrapper\\DisconInterface\\test1.din", ios::in);
+	oldFile.open("test1.din", ios::in);
 
-	wFile.open("C:\\Users\\User\\Desktop\\MM82 Controller\\WindsyCtrlWrapper\\DisconInterface\\writtenfile.din", ios::out);
+	wFile.open("writtenfile.din", ios::out);
+
+	//C:\\Users\\Mj\\S2\\mergefilesctrl\\
+
 
 	int i = 0;
 	if (oldFile.is_open()) {
@@ -50,7 +65,7 @@ int MergeFiles() {
 					int j = 0;
 					std::string tempString;
 
-					newFile.open("C:\\Users\\User\\Desktop\\MM82 Controller\\WindsyCtrlWrapper\\DisconInterface\\test2.din", ios::in);
+					newFile.open("test2.din", ios::in);
 
 					while (getline(newFile, newLine)) {
 

@@ -1,6 +1,6 @@
 ************* Turbine characteristics *************
-RatedPower          2080                    [kW]    *read from Flex if not specified; Rated Power
-GearEfficiency      0.9740                  [-]     *read from Flex if not specified; gear box efficiency
+RatedPower          1111                    [kW]    *read from Flex if not specified; Rated Power
+GearEfficiency      0.9999                  [-]     *read from Flex if not specified; gear box efficiency
 
 ************* Pitch controller *************
 PitSampleTime       0.06                    [s]     *pitch controller output sample time

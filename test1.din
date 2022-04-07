@@ -28,13 +28,13 @@ RpmMinConverter     900                     [rpm]   *read from Flex if not speci
 RpmMinOffset        200                      [rpm]   *minimal rpm for controller (MinRpm = MinRpmConverter + MinRpmOffset)
 LambdaOpt           8.3                     [-]     *optimal tip speed ratio
 CpOpt                0.4905                    [-]     *optimal power coefficient
-*Rho                 1.225                   [kg/m³] *read from Flex if not specified; air density (site specific: from height above sea level)
+Rho                 1.225                   [kg/m³] *read from Flex if not specified; air density (site specific: from height above sea level)
 RatedPower          2080                    [kW]    *read from Flex if not specified; Rated Power
-*MaxTorque           12020                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
-*MinTorque           -1100                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
-*RotorRadius         41.0400                 [m]     *read from Flex if not specified; rotor radius
-*GearRatio           105.4000                [-]     *read from Flex if not specified; gear box ratio
-*ElecEfficiency      0.9542                  [-]     *read from Flex if not specified; electrical efficiency of generator/converter system
+MaxTorque           12020                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
+MinTorque           -1100                   [Nm]    *read from Flex if not specified; limitation of torque setpoint
+RotorRadius         41.0400                 [m]     *read from Flex if not specified; rotor radius
+GearRatio           105.4000                [-]     *read from Flex if not specified; gear box ratio
+ElecEfficiency      0.9542                  [-]     *read from Flex if not specified; electrical efficiency of generator/converter system
 GearFriction        66.21                 [Nm]    *read from Flex if not specified; assumed constant friction (rel. to high speed shaft)
 GearEfficiency      0.9740                  [-]     *read from Flex if not specified; gear box efficiency
 
